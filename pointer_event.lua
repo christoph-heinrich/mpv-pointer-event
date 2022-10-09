@@ -23,14 +23,17 @@ local function analyze_mouse(mbtn)
 	-- local ds_dur = nil
 	-- local ds_w = nil
 	-- local ds_h = nil
-	local function drag_start()
+	local function drag_start(is_horizontal)
 		print('drag_start')
 		-- drag_total = 0
-		-- ds_vol = mp.get_property_number('volume')
-		-- ds_vol_max = mp.get_property_number('volume-max')
-		-- ds_time = mp.get_property_number('playback-time')
-		-- ds_dur = mp.get_property_number('duration')
 		-- ds_w, ds_h, _ = mp.get_osd_size()
+		-- if is_horizontal then
+		-- 	ds_time = mp.get_property_number('playback-time')
+		-- 	ds_dur = mp.get_property_number('duration')
+		-- else
+		-- 	ds_vol = mp.get_property_number('volume')
+		-- 	ds_vol_max = mp.get_property_number('volume-max')
+		-- end
 	end
 	local function drag_end()
 		print('drag_end')
@@ -129,16 +132,12 @@ local function analyze_mouse(mbtn)
 			if drag_possible and sq_dist >= drag_distance_sq then
 				double_click_timeout:kill()
 				long_click_timeout:kill()
-				drag_start()
+				dragging_horizontal = dx_sq > dy_sq
+				drag_start(dragging_horizontal)
 				drag(dx, dy)
 				dragging = true
-				if dx_sq > dy_sq then
-					drag_horizontal(dx)
-					dragging_horizontal = true
-				else
-					drag_vertical(dy)
-					dragging_horizontal = false
-				end
+				if dragging_horizontal then drag_horizontal(dx)
+				else drag_vertical(dy) end
 			end
 		end
 		last_drag_x, last_drag_y = x, y
