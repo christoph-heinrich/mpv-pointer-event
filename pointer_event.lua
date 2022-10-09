@@ -4,8 +4,8 @@ local options = require('mp.options')
 local opts = {
 	long_click_time = 0.5,
 	double_click_time = mp.get_property_number('input-doubleclick-time') / 1000,
-	drag_distance = 30 * mp.get_property_number('display-hidpi-scale'),
-	double_click_distance = 20 * mp.get_property_number('display-hidpi-scale'),
+	drag_distance = 30,
+	double_click_distance = 20,
 	left_single = '',
 	left_double = '',
 	left_long = '',
@@ -36,6 +36,8 @@ options.read_options(opts, 'pointer_event')
 for k, v in pairs(opts) do
 	if v == '' then opts[k] = nil end
 end
+
+local scale_sq = 1
 
 local function analyze_mouse(mbtn)
 
@@ -127,7 +129,7 @@ local function analyze_mouse(mbtn)
 		drag_possible = true
 		local dx, dy = x - last_down_x, y - last_down_y
 		local sq_dist = dx * dx + dy * dy
-		if now - last_down <= opts.double_click_time and sq_dist <= double_click_distance_sq then
+		if now - last_down <= opts.double_click_time and sq_dist <= double_click_distance_sq * scale_sq then
 			double_click_timeout:kill()
 			long_click_timeout:kill()
 			double_click()
@@ -166,7 +168,7 @@ local function analyze_mouse(mbtn)
 			local dx, dy = x - last_down_x, y - last_down_y
 			local dx_sq, dy_sq = dx * dx, dy * dy
 			local sq_dist = dx_sq + dy_sq
-			if drag_possible and sq_dist >= drag_distance_sq then
+			if drag_possible and sq_dist >= drag_distance_sq * scale_sq then
 				double_click_timeout:kill()
 				long_click_timeout:kill()
 				dragging_horizontal = dx_sq > dy_sq
@@ -214,3 +216,8 @@ end
 analyze_mouse('mbtn_left')
 analyze_mouse('mbtn_right')
 analyze_mouse('mbtn_mid')
+
+mp.observe_property('display-hidpi-scale', 'number', function(_, val)
+	if val then scale_sq = val * val
+	else scale_sq = 1 end
+end)
