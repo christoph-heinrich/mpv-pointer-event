@@ -1,3 +1,5 @@
+local msg = require("mp.msg")
+
 local function analyze_mouse(mbtn)
 
 	local long_click_time = 0.5
@@ -6,14 +8,14 @@ local function analyze_mouse(mbtn)
 	local double_click_distance = 20 * mp.get_property_number("display-hidpi-scale")
 
 	local function single_click()
-		print('single_click')
+		msg.verbose('single_click')
 		-- mp.commandv('cycle', 'pause')
 	end
 	local function double_click()
-		print('double_click')
+		msg.verbose('double_click')
 	end
 	local function long_click()
-		print('long_click')
+		msg.verbose('long_click')
 		-- mp.command('script-binding uosc/menu-blurred')
 	end
 	-- local drag_total = 0
@@ -24,7 +26,7 @@ local function analyze_mouse(mbtn)
 	-- local ds_w = nil
 	-- local ds_h = nil
 	local function drag_start(is_horizontal)
-		print('drag_start')
+		msg.verbose('drag_start')
 		-- drag_total = 0
 		-- ds_w, ds_h, _ = mp.get_osd_size()
 		-- if is_horizontal then
@@ -36,7 +38,7 @@ local function analyze_mouse(mbtn)
 		-- end
 	end
 	local function drag_end()
-		print('drag_end')
+		msg.verbose('drag_end')
 		-- drag_total = 0
 		-- ds_vol = nil
 		-- ds_vol_max = nil
@@ -44,10 +46,10 @@ local function analyze_mouse(mbtn)
 		-- ds_dur = nil
 	end
 	local function drag(dx, dy)
-		print('drag', dx, dy)
+		msg.verbose('drag', dx, dy)
 	end
 	local function drag_horizontal(dx)
-		print('drag_horizontal', dx)
+		msg.debug('drag_horizontal', dx)
 		-- if not ds_dur then return end
 		-- drag_total = drag_total + dx
 		-- local flags = (ds_w / ds_dur < 10) and 'absolute+keyframes' or 'absolute+exact'
@@ -55,7 +57,7 @@ local function analyze_mouse(mbtn)
 		-- mp.commandv('osd-msg', 'seek', dur, flags)
 	end
 	local function drag_vertical(dy)
-		print('drag_vertical', dy)
+		msg.debug('drag_vertical', dy)
 		-- drag_total = drag_total + dy
 		-- local vol = math.max(math.min(math.floor(-drag_total / ds_h * 100 + ds_vol + 0.5), ds_vol_max), 0)
 		-- mp.commandv('osd-msg', 'set', 'volume', vol)
@@ -88,6 +90,7 @@ local function analyze_mouse(mbtn)
 	double_click_timeout:kill()
 
 	local function btn_down(x, y)
+		msg.debug('btn_down', x, y)
 		local now = mp.get_time()
 		drag_possible = true
 		local dx, dy = x - last_down_x, y - last_down_y
@@ -110,6 +113,7 @@ local function analyze_mouse(mbtn)
 	end
 	local window_drag = false
 	local function btn_up()
+		msg.debug('btn_up')
 		if not double_click_timeout:is_enabled() and long_click_timeout:is_enabled() and
 			not dragging and drag_possible and not window_drag then
 			single_click()
@@ -120,6 +124,7 @@ local function analyze_mouse(mbtn)
 		down_start = nil
 	end
 	local function drag_to(x, y)
+		msg.debug('drag_to', x, y)
 		if dragging then
 			local dx, dy = x - last_drag_x, y - last_drag_y
 			drag(dx, dy)
@@ -147,6 +152,7 @@ local function analyze_mouse(mbtn)
 	mp.add_forced_key_binding(mbtn, 'pe_' .. mbtn, function(tab)
 		local mouse = mp.get_property_native('mouse-pos')
 		mouse_x, mouse_y = mouse.x, mouse.y
+		msg.trace(mbtn, tab.event, mouse.x, mouse.y)
 		if tab.event == 'up' then
 			-- because of window dragging the up event can come shortly after down
 			if down_start then
@@ -164,6 +170,7 @@ local function analyze_mouse(mbtn)
 		end
 	end, {complex = true})
 	mp.observe_property('mouse-pos', 'native', function(_, mouse)
+		msg.trace('mouse-pos', mouse.hover, mouse.x, mouse.y)
 		if mouse.hover and down_start then
 			if window_drag then btn_up()
 			else drag_to(mouse.x, mouse.y) end
