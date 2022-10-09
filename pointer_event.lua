@@ -146,6 +146,8 @@ local function analyze_mouse(mbtn)
 
 	local mouse_x, mouse_y = 0, 0
 	mp.add_forced_key_binding(mbtn, 'pe_' .. mbtn, function(tab)
+		local mouse = mp.get_property_native('mouse-pos')
+		mouse_x, mouse_y = mouse.x, mouse.y
 		if tab.event == 'up' then
 			-- because of window dragging the up event can come shortly after down
 			if down_start then
