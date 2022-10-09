@@ -1,11 +1,11 @@
-local msg = require("mp.msg")
+local msg = require('mp.msg')
 
 local function analyze_mouse(mbtn)
 
 	local long_click_time = 0.5
-	local double_click_time = mp.get_property_number("input-doubleclick-time") / 1000
-	local drag_distance = 30 * mp.get_property_number("display-hidpi-scale")
-	local double_click_distance = 20 * mp.get_property_number("display-hidpi-scale")
+	local double_click_time = mp.get_property_number('input-doubleclick-time') / 1000
+	local drag_distance = 30 * mp.get_property_number('display-hidpi-scale')
+	local double_click_distance = 20 * mp.get_property_number('display-hidpi-scale')
 
 	local function single_click()
 		msg.verbose('single_click')
