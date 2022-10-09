@@ -1,70 +1,102 @@
 local msg = require('mp.msg')
+local options = require('mp.options')
+
+local opts = {
+	long_click_time = 0.5,
+	double_click_time = mp.get_property_number('input-doubleclick-time') / 1000,
+	drag_distance = 30 * mp.get_property_number('display-hidpi-scale'),
+	double_click_distance = 20 * mp.get_property_number('display-hidpi-scale'),
+	left_single = '',
+	left_double = '',
+	left_long = '',
+	left_drag_start = '',
+	left_drag_end = '',
+	left_drag = '',
+	left_drag_horizontal = '',
+	left_drag_vertical = '',
+	right_single = '',
+	right_double = '',
+	right_long = '',
+	right_drag_start = '',
+	right_drag_end = '',
+	right_drag = '',
+	right_drag_horizontal = '',
+	right_drag_vertical = '',
+	mid_single = '',
+	mid_double = '',
+	mid_long = '',
+	mid_drag_start = '',
+	mid_drag_end = '',
+	mid_drag = '',
+	mid_drag_horizontal = '',
+	mid_drag_vertical = '',
+}
+options.read_options(opts, 'pointer_event')
+
+for k, v in pairs(opts) do
+	if v == '' then opts[k] = nil end
+end
 
 local function analyze_mouse(mbtn)
 
-	local long_click_time = 0.5
-	local double_click_time = mp.get_property_number('input-doubleclick-time') / 1000
-	local drag_distance = 30 * mp.get_property_number('display-hidpi-scale')
-	local double_click_distance = 20 * mp.get_property_number('display-hidpi-scale')
+	local key = mbtn
+	mbtn = mbtn:match('_(.+)$')
+	local cmd_single = opts[mbtn .. '_single']
+	local cmd_double = opts[mbtn .. '_double']
+	local cmd_long = opts[mbtn .. '_long']
+	local cmd_drag_start = opts[mbtn .. '_drag_start']
+	local cmd_drag_end = opts[mbtn .. '_drag_end']
+	local cmd_drag = opts[mbtn .. '_drag']
+	local cmd_drag_horizontal = opts[mbtn .. '_drag_horizontal']
+	local cmd_drag_vertical = opts[mbtn .. '_drag_vertical']
 
-	local function single_click()
+	if not cmd_single and
+		not cmd_double and
+		not cmd_long and
+		not cmd_drag_start and
+		not cmd_drag_end and
+		not cmd_drag and
+		not cmd_drag_horizontal and
+		not cmd_drag_vertical then
+		return
+	end
+
+	local nop = function() end
+	local single_click = cmd_single and function()
 		msg.verbose('single_click')
-		-- mp.commandv('cycle', 'pause')
-	end
-	local function double_click()
+		mp.command(cmd_single)
+	end or nop
+	local double_click = cmd_double and function()
 		msg.verbose('double_click')
-	end
-	local function long_click()
+		mp.command(cmd_double)
+	end or nop
+	local long_click = cmd_long and function()
 		msg.verbose('long_click')
-		-- mp.command('script-binding uosc/menu-blurred')
-	end
-	-- local drag_total = 0
-	-- local ds_vol = nil
-	-- local ds_vol_max = nil
-	-- local ds_time = nil
-	-- local ds_dur = nil
-	-- local ds_w = nil
-	-- local ds_h = nil
-	local function drag_start(is_horizontal)
-		msg.verbose('drag_start')
-		-- drag_total = 0
-		-- ds_w, ds_h, _ = mp.get_osd_size()
-		-- if is_horizontal then
-		-- 	ds_time = mp.get_property_number('playback-time')
-		-- 	ds_dur = mp.get_property_number('duration')
-		-- else
-		-- 	ds_vol = mp.get_property_number('volume')
-		-- 	ds_vol_max = mp.get_property_number('volume-max')
-		-- end
-	end
-	local function drag_end()
+		mp.command(cmd_long)
+	end or nop
+	local drag_start = cmd_drag_start and function(orientation)
+		msg.verbose('drag_start', orientation)
+		mp.command(cmd_drag_start .. ' ' .. orientation)
+	end or nop
+	local drag_end = cmd_drag_end and function()
 		msg.verbose('drag_end')
-		-- drag_total = 0
-		-- ds_vol = nil
-		-- ds_vol_max = nil
-		-- ds_time = nil
-		-- ds_dur = nil
-	end
-	local function drag(dx, dy)
+		mp.command(cmd_drag_end)
+	end or nop
+	local drag = cmd_drag and function(dx, dy)
 		msg.verbose('drag', dx, dy)
-	end
-	local function drag_horizontal(dx)
-		msg.debug('drag_horizontal', dx)
-		-- if not ds_dur then return end
-		-- drag_total = drag_total + dx
-		-- local flags = (ds_w / ds_dur < 10) and 'absolute+keyframes' or 'absolute+exact'
-		-- local dur = math.min(drag_total / ds_w * ds_dur + ds_time, 0)
-		-- mp.commandv('osd-msg', 'seek', dur, flags)
-	end
-	local function drag_vertical(dy)
-		msg.debug('drag_vertical', dy)
-		-- drag_total = drag_total + dy
-		-- local vol = math.max(math.min(math.floor(-drag_total / ds_h * 100 + ds_vol + 0.5), ds_vol_max), 0)
-		-- mp.commandv('osd-msg', 'set', 'volume', vol)
-	end
+		mp.command(cmd_drag .. ' ' .. dx .. ' ' .. dy)
+	end or nop
+	local drag_horizontal = cmd_drag_horizontal and function(dx)
+		msg.verbose('drag_horizontal', dx)
+		mp.command(cmd_drag_horizontal .. ' ' .. dx)
+	end or nop
+	local drag_vertical = cmd_drag_vertical and function(dy)
+		msg.verbose('drag_vertical', dy)
+		mp.command(cmd_drag_vertical .. ' ' .. dy)
+	end or nop
 
-	local drag_distance_sq = drag_distance * drag_distance
-	local double_click_distance_sq = double_click_distance * double_click_distance
+	local drag_distance_sq = opts.drag_distance * opts.drag_distance
+	local double_click_distance_sq = opts.double_click_distance * opts.double_click_distance
 
 	local last_drag_x = nil
 	local last_drag_y = nil
@@ -77,13 +109,13 @@ local function analyze_mouse(mbtn)
 	local last_down_y = 0
 	local down_start = nil
 
-	local long_click_timeout = mp.add_timeout(long_click_time, function()
+	local long_click_timeout = mp.add_timeout(opts.long_click_time, function()
 		long_click()
 		drag_possible = false
 	end)
 	long_click_timeout:kill()
 
-	local double_click_timeout = mp.add_timeout(double_click_time, function()
+	local double_click_timeout = mp.add_timeout(opts.double_click_time, function()
 		if down_start then return end
 		single_click()
 	end)
@@ -95,7 +127,7 @@ local function analyze_mouse(mbtn)
 		drag_possible = true
 		local dx, dy = x - last_down_x, y - last_down_y
 		local sq_dist = dx * dx + dy * dy
-		if now - last_down <= double_click_time and sq_dist <= double_click_distance_sq then
+		if now - last_down <= opts.double_click_time and sq_dist <= double_click_distance_sq then
 			double_click_timeout:kill()
 			long_click_timeout:kill()
 			double_click()
@@ -138,7 +170,7 @@ local function analyze_mouse(mbtn)
 				double_click_timeout:kill()
 				long_click_timeout:kill()
 				dragging_horizontal = dx_sq > dy_sq
-				drag_start(dragging_horizontal)
+				drag_start(dragging_horizontal and 'horizontal' or 'vertical')
 				drag(dx, dy)
 				dragging = true
 				if dragging_horizontal then drag_horizontal(dx)
@@ -149,10 +181,10 @@ local function analyze_mouse(mbtn)
 	end
 
 	local mouse_x, mouse_y = 0, 0
-	mp.add_forced_key_binding(mbtn, 'pe_' .. mbtn, function(tab)
+	mp.add_forced_key_binding(key, 'pe_' .. mbtn, function(tab)
 		local mouse = mp.get_property_native('mouse-pos')
 		mouse_x, mouse_y = mouse.x, mouse.y
-		msg.trace(mbtn, tab.event, mouse.x, mouse.y)
+		msg.trace(key, tab.event, mouse.x, mouse.y)
 		if tab.event == 'up' then
 			-- because of window dragging the up event can come shortly after down
 			if down_start then
@@ -180,3 +212,5 @@ local function analyze_mouse(mbtn)
 end
 
 analyze_mouse('mbtn_left')
+analyze_mouse('mbtn_right')
+analyze_mouse('mbtn_mid')
