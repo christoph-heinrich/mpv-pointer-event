@@ -107,7 +107,6 @@ local function analyze_mouse(mbtn)
 	local dragging_horizontal = true
 	local drag_possible = true
 
-	local last_down = 0
 	local last_down_x = 0
 	local last_down_y = 0
 	local down_start = nil
@@ -126,23 +125,20 @@ local function analyze_mouse(mbtn)
 
 	local function btn_down(x, y)
 		msg.debug('btn_down', x, y)
-		local now = mp.get_time()
-		if now - last_down <= opts.double_click_time then
+		if double_click_timeout:is_enabled() then
 			double_click_timeout:kill()
 			long_click_timeout:kill()
 			double_click()
 			drag_possible = false
-			last_down = 0
 		else
 			double_click_timeout:resume()
 			long_click_timeout:resume()
 			drag_possible = true
-			last_down = now
 		end
 
 		last_drag_x, last_drag_y = x, y
 		last_down_x, last_down_y = x, y
-		down_start = now
+		down_start = mp.get_time()
 	end
 	local window_drag = false
 	local function btn_up()
@@ -188,14 +184,12 @@ local function analyze_mouse(mbtn)
 		msg.trace(key, tab.event, mouse.x, mouse.y)
 		if tab.event == 'up' then
 			-- because of window dragging the up event can come shortly after down
-			if down_start then
-				if mp.get_time() - down_start > 0.02 then
-					btn_up()
-				else
-					double_click_timeout:kill()
-					long_click_timeout:kill()
-					window_drag = true
-				end
+			if mp.get_time() - down_start > 0.02 then
+				btn_up()
+			else
+				double_click_timeout:kill()
+				long_click_timeout:kill()
+				window_drag = true
 			end
 		else
 			btn_down(mouse_x, mouse_y)
