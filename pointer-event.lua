@@ -5,7 +5,6 @@ local opts = {
 	long_click_time = 0.5,
 	double_click_time = mp.get_property_number('input-doubleclick-time') / 1000,
 	drag_distance = 30,
-	double_click_distance = 20,
 	left_single = '',
 	left_double = '',
 	left_long = '',
@@ -98,7 +97,6 @@ local function analyze_mouse(mbtn)
 	end or nop
 
 	local drag_distance_sq = opts.drag_distance * opts.drag_distance
-	local double_click_distance_sq = opts.double_click_distance * opts.double_click_distance
 
 	local last_drag_x = nil
 	local last_drag_y = nil
@@ -126,10 +124,7 @@ local function analyze_mouse(mbtn)
 	local function btn_down(x, y)
 		msg.debug('btn_down', x, y)
 		local now = mp.get_time()
-		drag_possible = true
-		local dx, dy = x - last_down_x, y - last_down_y
-		local sq_dist = dx * dx + dy * dy
-		if now - last_down <= opts.double_click_time and sq_dist <= double_click_distance_sq * scale_sq then
+		if now - last_down <= opts.double_click_time then
 			double_click_timeout:kill()
 			long_click_timeout:kill()
 			double_click()
@@ -138,6 +133,7 @@ local function analyze_mouse(mbtn)
 		else
 			double_click_timeout:resume()
 			long_click_timeout:resume()
+			drag_possible = true
 			last_down = now
 		end
 
