@@ -26,12 +26,25 @@ local function drag_end()
 	ds_dur = nil
 end
 
+local time = nil
+local function seek(fast)
+	if not time then return end
+	mp.commandv('no-osd', 'seek', time, fast and 'absolute+keyframes' or 'absolute+exact')
+end
+seek_timer = mp.add_timeout(0.05, seek)
+seek_timer:kill()
 local function drag_horizontal(dx)
 	if not ds_dur then return end
 	drag_total = drag_total + dx
-	local flags = (ds_w / ds_dur < 10) and 'absolute+keyframes' or 'absolute+exact'
-	local dur = math.max(drag_total / ds_w * ds_dur + ds_time, 0)
-	mp.commandv('no-osd', 'seek', dur, flags)
+	time = math.max(drag_total / ds_w * ds_dur + ds_time, 0)
+	if ds_w / ds_dur < 10 then
+		-- Perform a fast seek while moving around and an exact seek afterwards
+		seek(true)
+		seek_timer:kill()
+		seek_timer:resume()
+	else
+		seek()
+	end
 	mp.commandv('script-binding', 'uosc/flash-timeline')
 end
 
