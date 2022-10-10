@@ -31,7 +31,7 @@ local opts = {
 	mid_drag_horizontal = '',
 	mid_drag_vertical = '',
 }
-options.read_options(opts, 'pointer_event')
+options.read_options(opts, 'pointer-event')
 
 for k, v in pairs(opts) do
 	if v == '' then opts[k] = nil end
