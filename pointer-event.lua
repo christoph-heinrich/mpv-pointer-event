@@ -210,6 +210,11 @@ local function analyze_mouse(mbtn)
 		end
 		mouse_x, mouse_y = mouse.x, mouse.y
 	end)
+	if cmd_double then
+		mp.add_forced_key_binding(key .. '_dbl', 'pe_' .. mbtn .. '_dbl', function()
+			-- to prevent warning about double click not being assigned
+		end)
+	end
 end
 
 analyze_mouse('mbtn_left')
