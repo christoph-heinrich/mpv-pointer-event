@@ -2,8 +2,8 @@ local msg = require('mp.msg')
 local options = require('mp.options')
 
 local opts = {
-	long_click_time = 0.5,
-	double_click_time = mp.get_property_number('input-doubleclick-time') / 1000,
+	long_click_time = 500,
+	double_click_time = mp.get_property_number('input-doubleclick-time'),
 	drag_distance = 30,
 	left_single = '',
 	left_double = '',
@@ -31,6 +31,9 @@ local opts = {
 	mid_drag_vertical = '',
 }
 options.read_options(opts, 'pointer-event')
+
+opts.long_click_time = opts.long_click_time / 1000
+opts.double_click_time = opts.double_click_time / 1000
 
 for k, v in pairs(opts) do
 	if v == '' then opts[k] = nil end
