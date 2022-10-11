@@ -3,7 +3,7 @@ local options = require('mp.options')
 
 local opts = {
 	long_click_time = 500,
-	double_click_time = mp.get_property_number('input-doubleclick-time'),
+	double_click_time = 0,
 	drag_distance = 30,
 	left_single = '',
 	left_double = '',
@@ -26,19 +26,25 @@ local opts = {
 }
 options.read_options(opts, 'pointer-event')
 
-opts.long_click_time = opts.long_click_time / 1000
-opts.double_click_time = opts.double_click_time / 1000
-
 for k, v in pairs(opts) do
 	if v == '' then opts[k] = nil end
 end
 
+opts.long_click_time = opts.long_click_time / 1000
+
+local prop_double_time = mp.get_property_number('input-doubleclick-time', 300)
+local double_time
+local function update_double_time()
+	local time = opts.double_click_time <= 0 and prop_double_time or opts.double_click_time
+	double_time = time / 1000
+end
+update_double_time()
+
 local scale_sq = 1
 
-local function analyze_mouse(mbtn)
+local function analyze_mouse(key)
 
-	local key = mbtn
-	mbtn = mbtn:match('_(.+)$')
+	local mbtn = key:match('_(.+)$')
 	local cmd_single = opts[mbtn .. '_single']
 	local cmd_double = opts[mbtn .. '_double']
 	local cmd_long = opts[mbtn .. '_long']
@@ -98,7 +104,7 @@ local function analyze_mouse(mbtn)
 	end)
 	long_click_timeout:kill()
 
-	local double_click_timeout = mp.add_timeout(opts.double_click_time, function()
+	local double_click_timeout = mp.add_timeout(double_time, function()
 		if down_start then return end
 		single_click()
 	end)
@@ -112,6 +118,7 @@ local function analyze_mouse(mbtn)
 			double_click()
 			drag_possible = false
 		else
+			double_click_timeout.timeout = double_time
 			double_click_timeout:resume()
 			long_click_timeout:resume()
 			drag_possible = true
@@ -193,4 +200,10 @@ analyze_mouse('mbtn_mid')
 mp.observe_property('display-hidpi-scale', 'number', function(_, val)
 	if val then scale_sq = val * val
 	else scale_sq = 1 end
+end)
+
+mp.observe_property('input-doubleclick-time', 'number', function(_, val)
+	if val then prop_double_time = val
+	else prop_double_time = 300 end
+	update_double_time()
 end)
