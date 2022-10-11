@@ -2,12 +2,12 @@
 
 ### Mouse/Touch input event detection for mpv
 
-Low latency detection of single-click, double-click, long-click and dragging.
+Low latency detection of single-click, double-click, long-click and dragging.  
 Each event is detected in a mutually exclusive manner, so e.g. a double-click won't also detect single-click events.
 
 Dragging will emit a start and stop event, as well as a drag event that includes a change in coordinates which can be used for detecting gestures.
 
-Beware that on Wayland in windowed mode with window dragging enabled (enabled by default) the left mouse button won't detect single-click and long-click events (because of [reasons](https://github.com/mpv-player/mpv/issues/9771#issuecomment-1272605271)). They will still work with touch and when in fullscreen or maximized.
+Beware that on Wayland in windowed mode with window dragging enabled (enabled by default) the left mouse button won't detect single-click and long-click events (because of [reasons](https://github.com/mpv-player/mpv/issues/9771#issuecomment-1272605271)). They will still work with touch and when in fullscreen or maximized mode.
 
 ## Installation
 
