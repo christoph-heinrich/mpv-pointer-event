@@ -2,10 +2,10 @@
 
 ### Mouse/Touch input event detection for mpv
 
-Low latency detection of single-click, double-click, long-click and horizontal/vertical dragging.
+Low latency detection of single-click, double-click, long-click and dragging.
 Each event is detected in a mutually exclusive manner, so e.g. a double-click won't also detect single-click events.
 
-Dragging will additionally emit a start and stop event, as well as a generic dragging event that can be used for detecting more complicated gestures.
+Dragging will additionally emit a start and stop event, as well as a drag event that includes a change in coordinates which can be used for detecting gestures.
 
 Beware that on Wayland in windowed mode with window dragging enabled (enabled by default) the left mouse button won't detect single-click and long-click events (because of [reasons](https://github.com/mpv-player/mpv/issues/9771#issuecomment-1272605271)). They will still work with touch and when in fullscreen or maximized.
 
@@ -35,12 +35,9 @@ long
 drag_start
 drag_end
 drag
-drag_horizontal
-drag_vertical
 ```
 
-`drag_start` appends ` horizontal` or ` vertical` to the command.
-`drag`, `drag_horizontal` and `drag_vertical` append the change in pointer position to the command. ` dx dy` for `drag` and only one of those for the other two.
+`drag` appends the change in pointer position ` dx dy` to the command.
 
 Additionally the options `long_click_time`, `double_click_time` and `drag_distance` are available. They all have sensible default values with `double_click_time` following [input-doubleclick-time](https://mpv.io/manual/master/#options-input-doubleclick-time). Times are interpreted as milliseconds.
 
@@ -54,4 +51,4 @@ It is meant to be used with [uosc](https://github.com/tomasklaen/uosc) because m
 Single click/tap pauses/unpauses the video.  
 Long click/tap opens the menu.  
 Drag/swipe vertical to change volume.  
-Drag/swipe vertical to seek.  
+Drag/swipe horizontal to seek.  

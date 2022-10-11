@@ -11,24 +11,18 @@ local opts = {
 	left_drag_start = '',
 	left_drag_end = '',
 	left_drag = '',
-	left_drag_horizontal = '',
-	left_drag_vertical = '',
 	right_single = '',
 	right_double = '',
 	right_long = '',
 	right_drag_start = '',
 	right_drag_end = '',
 	right_drag = '',
-	right_drag_horizontal = '',
-	right_drag_vertical = '',
 	mid_single = '',
 	mid_double = '',
 	mid_long = '',
 	mid_drag_start = '',
 	mid_drag_end = '',
 	mid_drag = '',
-	mid_drag_horizontal = '',
-	mid_drag_vertical = '',
 }
 options.read_options(opts, 'pointer-event')
 
@@ -51,17 +45,13 @@ local function analyze_mouse(mbtn)
 	local cmd_drag_start = opts[mbtn .. '_drag_start']
 	local cmd_drag_end = opts[mbtn .. '_drag_end']
 	local cmd_drag = opts[mbtn .. '_drag']
-	local cmd_drag_horizontal = opts[mbtn .. '_drag_horizontal']
-	local cmd_drag_vertical = opts[mbtn .. '_drag_vertical']
 
 	if not cmd_single and
 		not cmd_double and
 		not cmd_long and
 		not cmd_drag_start and
 		not cmd_drag_end and
-		not cmd_drag and
-		not cmd_drag_horizontal and
-		not cmd_drag_vertical then
+		not cmd_drag then
 		return
 	end
 
@@ -78,9 +68,9 @@ local function analyze_mouse(mbtn)
 		msg.verbose('long_click')
 		mp.command(cmd_long)
 	end or nop
-	local drag_start = cmd_drag_start and function(orientation)
-		msg.verbose('drag_start', orientation)
-		mp.command(cmd_drag_start .. ' ' .. orientation)
+	local drag_start = cmd_drag_start and function()
+		msg.verbose('drag_start')
+		mp.command(cmd_drag_start)
 	end or nop
 	local drag_end = cmd_drag_end and function()
 		msg.verbose('drag_end')
@@ -90,21 +80,12 @@ local function analyze_mouse(mbtn)
 		msg.verbose('drag', dx, dy)
 		mp.command(cmd_drag .. ' ' .. dx .. ' ' .. dy)
 	end or nop
-	local drag_horizontal = cmd_drag_horizontal and function(dx)
-		msg.verbose('drag_horizontal', dx)
-		mp.command(cmd_drag_horizontal .. ' ' .. dx)
-	end or nop
-	local drag_vertical = cmd_drag_vertical and function(dy)
-		msg.verbose('drag_vertical', dy)
-		mp.command(cmd_drag_vertical .. ' ' .. dy)
-	end or nop
 
 	local drag_distance_sq = opts.drag_distance * opts.drag_distance
 
 	local last_drag_x = nil
 	local last_drag_y = nil
 	local dragging = false
-	local dragging_horizontal = true
 	local drag_possible = true
 
 	local last_down_x = 0
@@ -157,21 +138,15 @@ local function analyze_mouse(mbtn)
 		if dragging then
 			local dx, dy = x - last_drag_x, y - last_drag_y
 			drag(dx, dy)
-			if dragging_horizontal then	drag_horizontal(dx)
-			else drag_vertical(dy) end
 		else
 			local dx, dy = x - last_down_x, y - last_down_y
-			local dx_sq, dy_sq = dx * dx, dy * dy
-			local sq_dist = dx_sq + dy_sq
+			local sq_dist = dx * dx + dy * dy
 			if drag_possible and sq_dist >= drag_distance_sq * scale_sq then
 				double_click_timeout:kill()
 				long_click_timeout:kill()
-				dragging_horizontal = dx_sq > dy_sq
-				drag_start(dragging_horizontal and 'horizontal' or 'vertical')
+				drag_start()
 				drag(dx, dy)
 				dragging = true
-				if dragging_horizontal then drag_horizontal(dx)
-				else drag_vertical(dy) end
 			end
 		end
 		last_drag_x, last_drag_y = x, y

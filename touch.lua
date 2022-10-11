@@ -1,30 +1,10 @@
 local drag_total = 0
-local ds_vol = nil
-local ds_vol_max = nil
-local ds_time = nil
-local ds_dur = nil
 local ds_w = nil
 local ds_h = nil
-
-local function drag_start(orientation)
-	drag_total = 0
-	ds_w, ds_h, _ = mp.get_osd_size()
-	if orientation == 'horizontal' then
-		ds_time = mp.get_property_number('playback-time')
-		ds_dur = mp.get_property_number('duration')
-	else
-		ds_vol = mp.get_property_number('volume')
-		ds_vol_max = mp.get_property_number('volume-max')
-	end
-end
-
-local function drag_end()
-	drag_total = 0
-	ds_vol = nil
-	ds_vol_max = nil
-	ds_time = nil
-	ds_dur = nil
-end
+local ds_time = nil
+local ds_dur = nil
+local ds_vol = nil
+local ds_vol_max = nil
 
 local time = nil
 local function seek(fast)
@@ -55,7 +35,42 @@ local function drag_vertical(dy)
 	mp.commandv('script-binding', 'uosc/flash-volume')
 end
 
+local drag_initialized = false
+local function drag_init(vertical)
+	if vertical then
+		ds_vol = mp.get_property_number('volume')
+		ds_vol_max = mp.get_property_number('volume-max')
+	else
+		ds_time = mp.get_property_number('playback-time')
+		ds_dur = mp.get_property_number('duration')
+	end
+	ds_w, ds_h, _ = mp.get_osd_size()
+	drag_initialized = true
+end
+
+local vertical = true
+local function drag(dx, dy)
+	if not drag_initialized then
+		vertical = dx * dx < dy * dy
+		drag_init(vertical)
+	end
+	if vertical then drag_vertical(dy)
+	else drag_horizontal(dx) end
+end
+
+local function drag_start()
+	drag_total = 0
+	drag_initialized = false
+end
+
+local function drag_end()
+	drag_total = 0
+	ds_vol = nil
+	ds_vol_max = nil
+	ds_time = nil
+	ds_dur = nil
+end
+
+mp.register_script_message('drag', drag)
 mp.register_script_message('drag_start', drag_start)
 mp.register_script_message('drag_end', drag_end)
-mp.register_script_message('drag_horizontal', drag_horizontal)
-mp.register_script_message('drag_vertical', drag_vertical)
