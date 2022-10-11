@@ -5,7 +5,7 @@
 Low latency detection of single-click, double-click, long-click and dragging.
 Each event is detected in a mutually exclusive manner, so e.g. a double-click won't also detect single-click events.
 
-Dragging will additionally emit a start and stop event, as well as a drag event that includes a change in coordinates which can be used for detecting gestures.
+Dragging will emit a start and stop event, as well as a drag event that includes a change in coordinates which can be used for detecting gestures.
 
 Beware that on Wayland in windowed mode with window dragging enabled (enabled by default) the left mouse button won't detect single-click and long-click events (because of [reasons](https://github.com/mpv-player/mpv/issues/9771#issuecomment-1272605271)). They will still work with touch and when in fullscreen or maximized.
 
@@ -39,7 +39,9 @@ drag
 
 `drag` appends the change in pointer position ` dx dy` to the command.
 
-Additionally the options `long_click_time`, `double_click_time` and `drag_distance` are available. They all have sensible default values with `double_click_time` following [input-doubleclick-time](https://mpv.io/manual/master/#options-input-doubleclick-time). Times are interpreted as milliseconds.
+Additionally the options `long_click_time`, `double_click_time` and `drag_distance` are available.  
+They all have sensible default values with `double_click_time` following [input-doubleclick-time](https://mpv.io/manual/master/#options-input-doubleclick-time). Time is interpreted as milliseconds.
+`drag_distance` determines how far the input has to be dragged to count as a drag instead of a click/touch.
 
 Beware of conflicts with mpvs built-in key bindings as well as your key configuration in `input.conf`.
 
