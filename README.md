@@ -52,5 +52,6 @@ It is meant to be used with [uosc](https://github.com/tomasklaen/uosc) because m
 
 Single click/tap pauses/unpauses the video.  
 Long click/tap opens the menu.  
-Drag/swipe vertical to change volume.  
+Drag/swipe vertical on the left half to change speed.  
+Drag/swipe vertical on the right half to change volume.  
 Drag/swipe horizontal to seek.  

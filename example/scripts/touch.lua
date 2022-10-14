@@ -5,6 +5,7 @@ local ds_time = nil
 local ds_dur = nil
 local ds_vol = nil
 local ds_vol_max = nil
+local ds_speed = nil
 
 local time = nil
 local function seek(fast)
@@ -13,7 +14,7 @@ local function seek(fast)
 end
 seek_timer = mp.add_timeout(0.05, seek)
 seek_timer:kill()
-local function drag_horizontal(dx)
+local function drag_seek(dx)
 	if not ds_dur then return end
 	drag_total = drag_total + dx
 	time = math.max(drag_total / ds_w * ds_dur + ds_time, 0)
@@ -28,34 +29,48 @@ local function drag_horizontal(dx)
 	mp.commandv('script-binding', 'uosc/flash-timeline')
 end
 
-local function drag_vertical(dy)
+local function drag_volume(dy)
 	drag_total = drag_total + dy
-	local vol = math.max(math.min(math.floor(-drag_total / ds_h * 100 + ds_vol + 0.5), ds_vol_max), 0)
-	mp.commandv('no-osd', 'set', 'volume', vol)
+	local vol = math.floor(-drag_total / ds_h * 100 + ds_vol + 0.5)
+	mp.commandv('no-osd', 'set', 'volume', math.max(math.min(vol, ds_vol_max), 0))
 	mp.commandv('script-binding', 'uosc/flash-volume')
 end
 
+local function drag_speed(dy)
+	drag_total = drag_total + dy
+	local speed = math.floor((-drag_total / ds_h * 3 + ds_speed) * 10 + 0.5) / 10
+	mp.commandv('no-osd', 'set', 'speed', math.max(math.min(speed, 5), 0.1))
+	mp.commandv('script-binding', 'uosc/flash-speed')
+end
+
 local drag_initialized = false
-local function drag_init(vertical)
+local function drag_init(dx, dy)
+	drag_initialized = true
+	ds_w, ds_h, _ = mp.get_osd_size()
+	local vertical = dx * dx < dy * dy
 	if vertical then
-		ds_vol = mp.get_property_number('volume')
-		ds_vol_max = mp.get_property_number('volume-max')
+		local mouse = mp.get_property_native('mouse-pos')
+		if mouse.x > ds_w / 2 then
+			ds_vol = mp.get_property_number('volume')
+			ds_vol_max = mp.get_property_number('volume-max')
+			return 'volume'
+		else
+			ds_speed = mp.get_property_number('speed')
+			return 'speed'
+		end
 	else
 		ds_time = mp.get_property_number('playback-time')
 		ds_dur = mp.get_property_number('duration')
+		return 'seek'
 	end
-	ds_w, ds_h, _ = mp.get_osd_size()
-	drag_initialized = true
 end
 
-local vertical = true
+local kind = nil
 local function drag(dx, dy)
-	if not drag_initialized then
-		vertical = dx * dx < dy * dy
-		drag_init(vertical)
-	end
-	if vertical then drag_vertical(dy)
-	else drag_horizontal(dx) end
+	if not drag_initialized then kind = drag_init(dx, dy) end
+	if kind == 'volume' then drag_volume(dy)
+	elseif kind == 'speed' then drag_speed(dy)
+	else drag_seek(dx) end
 end
 
 local function drag_start()
