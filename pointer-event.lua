@@ -4,7 +4,11 @@ local options = require('mp.options')
 local opts = {
 	long_click_time = 500,
 	double_click_time = 0,
-	drag_distance = 30,
+	drag_distance = 20,
+	margin_left = 0,
+	margin_right = 0,
+	margin_top = 50,
+	margin_bottom = 90,
 	left_single = '',
 	left_double = '',
 	left_long = '',
@@ -40,7 +44,15 @@ local function update_double_time()
 end
 update_double_time()
 
+local scale = 1
 local scale_sq = 1
+
+local width, height = 0, 0
+local area_x0, area_x1, area_y0, area_y1
+local function update_area()
+	area_x0, area_y0 = opts.margin_left * scale, opts.margin_top * scale
+	area_x1, area_y1 = width - opts.margin_right * scale, height - opts.margin_bottom * scale
+end
 
 local function analyze_mouse(key)
 
@@ -98,15 +110,22 @@ local function analyze_mouse(key)
 	local last_down_y = 0
 	local down_start = nil
 
+	local function recognized_event(fun, dx, dy)
+		if last_down_x >= area_x0 and last_down_x < area_x1 and
+			last_down_y >= area_y0 and last_down_y < area_y1 then
+			fun(dx, dy)
+		end
+	end
+
 	local long_click_timeout = mp.add_timeout(opts.long_click_time, function()
-		long_click()
+		recognized_event(long_click)
 		drag_possible = false
 	end)
 	long_click_timeout:kill()
 
 	local double_click_timeout = mp.add_timeout(double_time, function()
 		if down_start then return end
-		single_click()
+		recognized_event(single_click)
 	end)
 	double_click_timeout:kill()
 
@@ -115,7 +134,7 @@ local function analyze_mouse(key)
 		if double_click_timeout:is_enabled() then
 			double_click_timeout:kill()
 			long_click_timeout:kill()
-			double_click()
+			recognized_event(double_click)
 			drag_possible = false
 		else
 			double_click_timeout.timeout = double_time
@@ -133,10 +152,10 @@ local function analyze_mouse(key)
 		msg.debug('btn_up')
 		if not double_click_timeout:is_enabled() and long_click_timeout:is_enabled() and
 			not dragging and drag_possible and not window_drag then
-			single_click()
+			recognized_event(single_click)
 		end
 		long_click_timeout:kill()
-		if dragging then drag_end() end
+		if dragging then recognized_event(drag_end) end
 		dragging = false
 		down_start = nil
 	end
@@ -144,15 +163,15 @@ local function analyze_mouse(key)
 		msg.debug('drag_to', x, y)
 		if dragging then
 			local dx, dy = x - last_drag_x, y - last_drag_y
-			drag(dx, dy)
+			recognized_event(drag, dx, dy)
 		else
 			local dx, dy = x - last_down_x, y - last_down_y
 			local sq_dist = dx * dx + dy * dy
 			if drag_possible and sq_dist >= drag_distance_sq * scale_sq then
 				double_click_timeout:kill()
 				long_click_timeout:kill()
-				drag_start()
-				drag(dx, dy)
+				recognized_event(drag_start)
+				recognized_event(drag, dx, dy)
 				dragging = true
 			end
 		end
@@ -198,8 +217,20 @@ analyze_mouse('mbtn_right')
 analyze_mouse('mbtn_mid')
 
 mp.observe_property('display-hidpi-scale', 'number', function(_, val)
-	if val then scale_sq = val * val
-	else scale_sq = 1 end
+	if val then
+		scale = val
+		scale_sq = val * val
+	else
+		scale = 1
+		scale_sq = 1
+	end
+	update_area()
+end)
+
+mp.observe_property('osd-dimensions', 'native', function(_, dim)
+	if not dim then return end
+	width, height = dim.w, dim.h
+	update_area()
 end)
 
 mp.observe_property('input-doubleclick-time', 'number', function(_, val)

@@ -18,7 +18,7 @@ Beware that on Wayland in windowed mode with window dragging enabled (enabled by
 
 Upon detecting an event the corresponding [command](https://mpv.io/manual/master/#list-of-input-commands) from the `pointer-event.conf` in your script-opts directory (next to the scripts directory, create if it doesn't exist) gets executed.
 
-The command configuration follows the `<button>_<event_type>=command` scheme.
+The command configuration follows the `<button>_<event_type>=command` pattern.
 
 The available buttons are
 ```
@@ -39,9 +39,20 @@ drag
 
 `drag` appends the change in pointer position ` dx dy` to the command.
 
-Additionally the options `long_click_time`, `double_click_time` and `drag_distance` are available.  
+Additionally there are also
+```
+long_click_time
+double_click_time
+drag_distance
+margin_left
+margin_right
+margin_top
+margin_bottom
+```
+
 They all have sensible default values with `double_click_time` following [input-doubleclick-time](https://mpv.io/manual/master/#options-input-doubleclick-time). Time is interpreted as milliseconds.
 `drag_distance` determines how far the input has to be dragged to count as a drag instead of a click/touch.
+The `margin_*` options allow for easier interaction with the osd without triggering any events.
 
 Beware of conflicts with mpvs built-in key bindings as well as your key configuration in `input.conf`.
 
