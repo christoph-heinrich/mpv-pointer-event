@@ -1,3 +1,8 @@
+-- pointer-event 1.1.0 - 2022-Oct-23
+-- https://github.com/christoph-heinrich/mpv-pointer-event
+--
+-- Low latency detection of single-click, double-click, long-click and dragging.
+
 local drag_total = 0
 local ds_w = nil
 local ds_h = nil

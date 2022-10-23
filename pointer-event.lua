@@ -1,3 +1,8 @@
+-- pointer-event 1.1.0 - 2022-Oct-23
+-- https://github.com/christoph-heinrich/mpv-pointer-event
+--
+-- Low latency detection of single-click, double-click, long-click and dragging.
+
 local msg = require('mp.msg')
 local options = require('mp.options')
 
