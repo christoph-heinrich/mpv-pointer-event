@@ -187,7 +187,7 @@ local function analyze_mouse(key)
 	mp.add_forced_key_binding(key, 'pe_' .. mbtn, function(tab)
 		local mouse = mp.get_property_native('mouse-pos')
 		mouse_x, mouse_y = mouse.x, mouse.y
-		msg.trace(key, tab.event, mouse.x, mouse.y)
+		msg.trace(key, mouse.x, mouse.y, mouse.hover, tab.event)
 		if tab.event == 'up' then
 			-- because of window dragging the up event can come shortly after down
 			if mp.get_time() - down_start > 0.02 then
@@ -202,8 +202,8 @@ local function analyze_mouse(key)
 			window_drag = false
 		end
 	end, {complex = true})
-	mp.observe_property('mouse-pos', 'native', function(_, mouse)
-		msg.trace('mouse-pos', mouse.hover, mouse.x, mouse.y)
+	mp.observe_property('mouse-pos', 'native', function(name, mouse)
+		msg.trace(name, mouse.x, mouse.y, mouse.hover)
 		if mouse.hover and down_start then
 			if window_drag then btn_up()
 			else drag_to(mouse.x, mouse.y) end
@@ -221,7 +221,8 @@ analyze_mouse('mbtn_left')
 analyze_mouse('mbtn_right')
 analyze_mouse('mbtn_mid')
 
-mp.observe_property('display-hidpi-scale', 'number', function(_, val)
+mp.observe_property('display-hidpi-scale', 'number', function(name, val)
+	msg.trace(name, val)
 	if val then
 		scale = val
 		scale_sq = val * val
@@ -232,13 +233,15 @@ mp.observe_property('display-hidpi-scale', 'number', function(_, val)
 	update_area()
 end)
 
-mp.observe_property('osd-dimensions', 'native', function(_, dim)
+mp.observe_property('osd-dimensions', 'native', function(name, dim)
+	msg.trace(name, dim and dim.w or nil, dim and dim.h or nil)
 	if not dim then return end
 	width, height = dim.w, dim.h
 	update_area()
 end)
 
-mp.observe_property('input-doubleclick-time', 'number', function(_, val)
+mp.observe_property('input-doubleclick-time', 'number', function(name, val)
+	msg.trace(name, val)
 	if val then prop_double_time = val
 	else prop_double_time = 300 end
 	update_double_time()
