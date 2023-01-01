@@ -204,7 +204,7 @@ local function analyze_mouse(key)
 	end, {complex = true})
 	mp.observe_property('mouse-pos', 'native', function(name, mouse)
 		msg.trace(name, mouse.x, mouse.y, mouse.hover)
-		if mouse.hover and down_start then
+		if down_start then
 			if window_drag then btn_up()
 			else drag_to(mouse.x, mouse.y) end
 		end
