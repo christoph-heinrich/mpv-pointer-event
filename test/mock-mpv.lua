@@ -112,11 +112,8 @@ function mock.time(seconds)
 	end
 	time_s = seconds
 end
-local function call_cb(table, key, name, arg)
-	if name == nil then
-		name = table.key_name[key]
-	end
-	local cb = table.name_cb[name]
+local function call_key_cb(table, key, arg)
+	local cb = table.name_cb[table.key_name[key]]
 	if cb then
 		cb(arg)
 		return true
@@ -124,14 +121,14 @@ local function call_cb(table, key, name, arg)
 		return false
 	end
 end
-function mock.key_down(key, name)
-	if not call_cb(key_bindings_forced, key, name, {event = 'down'}) then
-		call_cb(key_bindings, key, name, {event = 'down'})
+function mock.key_down(key)
+	if not call_key_cb(key_bindings_forced, key, {event = 'down'}) then
+		call_key_cb(key_bindings, key, {event = 'down'})
 	end
 end
-function mock.key_up(key, name)
-	if not call_cb(key_bindings_forced, key, name, {event = 'up'}) then
-		call_cb(key_bindings, key, name, {event = 'up'})
+function mock.key_up(key)
+	if not call_key_cb(key_bindings_forced, key, {event = 'up'}) then
+		call_key_cb(key_bindings, key, {event = 'up'})
 	end
 end
 function mock.set_property(name, value)
@@ -139,14 +136,10 @@ function mock.set_property(name, value)
 	property_callback_pending[name] = true
 end
 function mock.run_property_observers()
-	local to_del = {}
 	for name, _ in pairs(property_callback_pending) do
-		to_del[#to_del+1] = name
 		property_callbacks[name](name, properties[name])
 	end
-	for _, name in ipairs(to_del) do
-		property_callback_pending[name] = nil
-	end
+	property_callback_pending = {}
 end
 
 return mock

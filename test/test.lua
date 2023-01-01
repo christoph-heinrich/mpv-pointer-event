@@ -1,5 +1,5 @@
 local mock = require('test/mock-mpv')
-mock.config_path('example/script-opts/pointer-event.conf')
+mock.config_path('test/pointer-event.conf')
 
 require('pointer-event')
 
@@ -39,13 +39,13 @@ for line in io.lines() do
 					prop_value = scale,
 				}
 			elseif message:find('input-doubleclick-time', 1, true) then
-				local time = message:match('(%d+)')
-				time = tonumber(time)
+				local dc_time = message:match('(%d+)')
+				dc_time = tonumber(dc_time)
 				events[#events+1] = {
 					time = time,
 					type = 'prop',
 					prop_name = 'input-doubleclick-time',
-					prop_value = time,
+					prop_value = dc_time,
 				}
 			else
 				local key, x, y, hover, dir = message:match('([%w_]+) (%d+) (%d+) (%w+) (%w+)')
