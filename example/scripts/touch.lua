@@ -91,6 +91,21 @@ local function drag_end()
 	ds_dur = nil
 end
 
+local function double()
+	w, _, _ = mp.get_osd_size()
+	local mouse = mp.get_property_native('mouse-pos')
+	if mouse.x < w / 3  then
+		mp.commandv('no-osd', 'seek', -10, 'relative+exact')
+		mp.commandv('script-binding', 'uosc/flash-timeline')
+	elseif mouse.x < w * 2 / 3 then
+		mp.commandv('cycle', 'fullscreen')
+	else
+		mp.commandv('no-osd', 'seek', 10, 'relative+exact')
+		mp.commandv('script-binding', 'uosc/flash-timeline')
+	end
+end
+
 mp.register_script_message('drag', drag)
 mp.register_script_message('drag_start', drag_start)
 mp.register_script_message('drag_end', drag_end)
+mp.register_script_message('double', double)
