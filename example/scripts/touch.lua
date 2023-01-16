@@ -3,6 +3,9 @@
 --
 -- Low latency detection of single-click, double-click, long-click and dragging.
 
+local uosc = false
+local osd_pref = 'osd-auto'
+
 local drag_total = 0
 local ds_w = nil
 local ds_h = nil
@@ -15,7 +18,7 @@ local ds_speed = nil
 local time = nil
 local function seek(fast)
 	if not time then return end
-	mp.commandv('no-osd', 'seek', time, fast and 'absolute+keyframes' or 'absolute+exact')
+	mp.commandv(osd_pref, 'seek', time, fast and 'absolute+keyframes' or 'absolute+exact')
 end
 seek_timer = mp.add_timeout(0.05, seek)
 seek_timer:kill()
@@ -31,21 +34,21 @@ local function drag_seek(dx)
 	else
 		seek()
 	end
-	mp.commandv('script-binding', 'uosc/flash-timeline')
+	if uosc then mp.commandv('script-binding', 'uosc/flash-timeline') end
 end
 
 local function drag_volume(dy)
 	drag_total = drag_total + dy
 	local vol = math.floor(-drag_total / ds_h * 100 + ds_vol + 0.5)
-	mp.commandv('no-osd', 'set', 'volume', math.max(math.min(vol, ds_vol_max), 0))
-	mp.commandv('script-binding', 'uosc/flash-volume')
+	mp.commandv(osd_pref, 'set', 'volume', math.max(math.min(vol, ds_vol_max), 0))
+	if uosc then mp.commandv('script-binding', 'uosc/flash-volume') end
 end
 
 local function drag_speed(dy)
 	drag_total = drag_total + dy
 	local speed = math.floor((-drag_total / ds_h * 3 + ds_speed) * 10 + 0.5) / 10
-	mp.commandv('no-osd', 'set', 'speed', math.max(math.min(speed, 5), 0.1))
-	mp.commandv('script-binding', 'uosc/flash-speed')
+	mp.commandv(osd_pref, 'set', 'speed', math.max(math.min(speed, 5), 0.1))
+	if uosc then mp.commandv('script-binding', 'uosc/flash-speed') end
 end
 
 local drag_initialized = false
@@ -95,13 +98,13 @@ local function double()
 	w, _, _ = mp.get_osd_size()
 	local mouse = mp.get_property_native('mouse-pos')
 	if mouse.x < w / 3  then
-		mp.commandv('no-osd', 'seek', -10, 'relative+exact')
-		mp.commandv('script-binding', 'uosc/flash-timeline')
+		mp.commandv(osd_pref, 'seek', -10, 'relative+exact')
+		if uosc then mp.commandv('script-binding', 'uosc/flash-timeline') end
 	elseif mouse.x < w * 2 / 3 then
 		mp.commandv('cycle', 'fullscreen')
 	else
-		mp.commandv('no-osd', 'seek', 10, 'relative+exact')
-		mp.commandv('script-binding', 'uosc/flash-timeline')
+		mp.commandv(osd_pref, 'seek', 10, 'relative+exact')
+		if uosc then mp.commandv('script-binding', 'uosc/flash-timeline') end
 	end
 end
 
@@ -109,3 +112,12 @@ mp.register_script_message('drag', drag)
 mp.register_script_message('drag_start', drag_start)
 mp.register_script_message('drag_end', drag_end)
 mp.register_script_message('double', double)
+
+-- check if uosc is running
+mp.register_script_message('uosc-version', function(version)
+    version = tonumber((version:gsub('%.', '')))
+    ---@diagnostic disable-next-line: cast-local-type
+    uosc = version and version >= 400
+	if uosc then osd_pref = 'no-osd' end
+end)
+mp.commandv('script-message-to', 'uosc', 'get-version', mp.get_script_name())

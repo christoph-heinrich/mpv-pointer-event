@@ -59,7 +59,7 @@ Beware of conflicts with mpvs built-in key bindings as well as your key configur
 ## Example
 
 [touch.lua](https://github.com/christoph-heinrich/mpv-pointer-event/raw/master/example/scripts/touch.lua) and [pointer-event.conf](https://github.com/christoph-heinrich/mpv-pointer-event/raw/master/example/script-opts/pointer-event.conf) are an example for a configuration that's useful on touchscreens.  
-It is meant to be used with [uosc](https://github.com/tomasklaen/uosc) because mpv doesn't have a graphical menu available by default.
+It has [uosc](https://github.com/tomasklaen/uosc) integration, but it also works without that.
 
 Single click/tap pauses/unpauses the video.  
 Long click/tap opens the menu.  
