@@ -1,11 +1,12 @@
 local conf_path = nil
+local script_name = nil
 local time_s = 0
 local key_bindings = {key_name = {}, name_cb = {}}
 local key_bindings_forced = {key_name = {}, name_cb = {}}
 local properties = {}
 local property_callbacks = {}
-local property_callback_pending = {}
 local timers = {}
+local log_buffer = {}
 
 mp = {}
 function mp.add_key_binding(key, name, callback, _flags)
@@ -19,13 +20,12 @@ function mp.add_forced_key_binding(key, name, callback, _flags)
 	key_bindings_forced.name_cb[name] = callback
 end
 function mp.get_property() end
-function mp.register_event() end
-function mp.register_script_message() end
-function mp.get_script_name() end
+function mp.register_event(_name, _callback) end
+function mp.register_script_message(_name, _callback) end
+function mp.get_script_name() return script_name end
 function mp.command(_cmd) end
 function mp.observe_property(name, _type, callback)
 	property_callbacks[name] = callback
-	property_callback_pending[name] = true
 end
 function mp.create_osd_overlay() end
 function mp.get_property_native(name) return properties[name] end
@@ -62,11 +62,29 @@ local mp_utils = {}
 package.loaded["mp.utils"] = mp_utils
 
 local mp_msg = {}
-function mp_msg.trace(...) print(string.format('[%8.3f]', time_s), '[t]', ...) end
-function mp_msg.debug(...) print(string.format('[%8.3f]', time_s), '[d]', ...) end
-function mp_msg.verbose(...) print(string.format('[%8.3f]', time_s), '[v]', ...) end
-function mp_msg.info(...) print(string.format('[%8.3f]', time_s), '[i]', ...) end
-function mp_msg.error(...) print(string.format('[%8.3f]', time_s), '[e]', ...) end
+function mp_msg.log(level, ...)
+	if level == 'no' or level == 'status' then return
+	elseif level == 'fatal' then level = 'f'
+	elseif level == 'error' then level = 'e'
+	elseif level == 'warn' then level = 'w'
+	elseif level == 'info' then level = 'i'
+	elseif level == 'v' then level = 'v'
+	elseif level == 'debug' then level = 'd'
+	elseif level == 'trace' then level = 't'
+	end
+	args = {...}
+	for i, v in ipairs(args) do args[i] = tostring(v) end
+	log_buffer[#log_buffer + 1] = string.format('[%8.3f][%s][%s] %s ', time_s, level, script_name, table.concat(args, ' '))
+	print(log_buffer[#log_buffer])
+end
+function mp_msg.fatal(...) mp_msg.log('fatal', ...) end
+function mp_msg.error(...) mp_msg.log('error', ...) end
+function mp_msg.warn(...) mp_msg.log('warn', ...) end
+function mp_msg.info(...) mp_msg.log('info', ...) end
+function mp_msg.verbose(...) mp_msg.log('v', ...) end
+function mp_msg.debug(...) mp_msg.log('debug', ...) end
+function mp_msg.trace(...) mp_msg.log('trace', ...) end
+
 package.loaded["mp.msg"] = mp_msg
 
 local mp_assdraw = {}
@@ -89,6 +107,7 @@ package.loaded["mp.options"] = mp_options
 
 local mock = {}
 function mock.config_path(path) conf_path = path end
+function mock.script_name(name) script_name = name:gsub('-', '_') end
 local function next_timer()
 	local first = next(timers)
 	for timer,_ in pairs(timers) do
@@ -131,15 +150,12 @@ function mock.key_up(key)
 		call_key_cb(key_bindings, key, {event = 'up'})
 	end
 end
-function mock.set_property(name, value)
+function mock.set_property(name, value, run_observer)
 	properties[name] = value
-	property_callback_pending[name] = true
+	if run_observer then property_callbacks[name](name, value) end
 end
-function mock.run_property_observers()
-	for name, _ in pairs(property_callback_pending) do
-		property_callbacks[name](name, properties[name])
-	end
-	property_callback_pending = {}
+function mock.get_log_buffer()
+	return log_buffer
 end
 
 return mock
