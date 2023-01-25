@@ -3,6 +3,9 @@
 --
 -- Low latency detection of single-click, double-click, long-click and dragging.
 
+-- workaround https://github.com/mpv-player/mpv/issues/11154
+mp.add_key_binding('mouse_move', nil, function() end)
+
 local msg = require('mp.msg')
 local options = require('mp.options')
 
@@ -152,11 +155,10 @@ local function analyze_mouse(key)
 		last_down_x, last_down_y = x, y
 		down_start = mp.get_time()
 	end
-	local window_drag = false
 	local function btn_up()
 		msg.debug('btn_up')
 		if not double_click_timeout:is_enabled() and long_click_timeout:is_enabled() and
-			not dragging and drag_possible and not window_drag then
+			not dragging and drag_possible then
 			recognized_event(single_click)
 		end
 		long_click_timeout:kill()
@@ -188,30 +190,17 @@ local function analyze_mouse(key)
 		local mouse = mp.get_property_native('mouse-pos')
 		mouse_x, mouse_y = mouse.x, mouse.y
 		msg.trace(key, mouse.x, mouse.y, mouse.hover, tab.event)
-		if tab.event == 'up' then
-			-- because of window dragging the up event can come shortly after down
-			if mp.get_time() - down_start > 0.02 then
-				btn_up()
-			else
-				double_click_timeout:kill()
-				long_click_timeout:kill()
-				window_drag = true
-			end
-		else
-			btn_down(mouse_x, mouse_y)
-			window_drag = false
-		end
+		if tab.event == 'up' then btn_up()
+		else btn_down(mouse_x, mouse_y) end
 	end, {complex = true})
 	mp.observe_property('mouse-pos', 'native', function(name, mouse)
+		if not mouse then return end
 		msg.trace(name, mouse.x, mouse.y, mouse.hover)
-		if down_start then
-			if window_drag then btn_up()
-			else drag_to(mouse.x, mouse.y) end
-		end
+		if down_start then drag_to(mouse.x, mouse.y) end
 		mouse_x, mouse_y = mouse.x, mouse.y
 	end)
 	if cmd_double then
-		mp.add_forced_key_binding(key .. '_dbl', 'pe_' .. mbtn .. '_dbl', function()
+		mp.add_key_binding(key .. '_dbl', 'pe_' .. mbtn .. '_dbl', function()
 			-- to prevent warning about double click not being assigned
 		end)
 	end
