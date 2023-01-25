@@ -7,7 +7,8 @@ Each event is detected in a mutually exclusive manner, so e.g. a double-click wo
 
 Dragging will emit a start and stop event, as well as a drag event that includes a change in coordinates which can be used for detecting gestures.
 
-Beware that on Wayland in windowed mode with window dragging enabled (enabled by default) the left mouse button won't detect single-click and long-click events (because of [reasons](https://github.com/mpv-player/mpv/issues/9771#issuecomment-1272605271)). They will still work with touch and when in fullscreen or maximized mode.
+Beware that window dragging interferes with gesture detection unless you use `--no-window-dragging`.
+See `ignore_left_single_long_while_window_dragging` option for more information.
 
 ## Installation
 
@@ -27,6 +28,7 @@ right
 mid
 ```
 
+Touch input is recognized as `left`.
 Each of those can listen to the following event types
 ```
 single
@@ -48,11 +50,14 @@ margin_left
 margin_right
 margin_top
 margin_bottom
+ignore_left_single_long_while_window_dragging
 ```
 
-They all have sensible default values with `double_click_time` following [input-doubleclick-time](https://mpv.io/manual/master/#options-input-doubleclick-time). Time is interpreted as milliseconds.
+They all have sensible default values with `double_click_time` following [input-doubleclick-time](https://mpv.io/manual/master/#options-input-doubleclick-time). Time is interpreted as milliseconds.  
 `drag_distance` determines how far the input has to be dragged to count as a drag instead of a click/touch.
 The `margin_*` options allow for easier interaction with the osd without triggering any events.
+
+It can be desirable to have window dragging enabled and also want gesture detection.  `ignore_left_single_long_while_window_dragging` exists to avoid triggering single and long click events while dragging the window. Those events will still work while in fullscreen or maximized mode.
 
 Beware of conflicts with mpvs built-in key bindings as well as your key configuration in `input.conf`.
 

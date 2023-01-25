@@ -17,6 +17,7 @@ local opts = {
 	margin_right = 0,
 	margin_top = 50,
 	margin_bottom = 90,
+	ignore_left_single_long_while_window_dragging = true,
 	left_single = '',
 	left_double = '',
 	left_long = '',
@@ -43,6 +44,16 @@ for k, v in pairs(opts) do
 end
 
 opts.long_click_time = opts.long_click_time / 1000
+
+local window_dragging_enabled = mp.get_property_bool('window-dragging')
+if window_dragging_enabled then
+	msg.warn('window dragging is enabled and can interfere with gesture detection')
+end
+
+local fullscreen, maximized, windowed = false, false, true
+local function update_windowed()
+	windowed = not (fullscreen or maximized)
+end
 
 local prop_double_time = mp.get_property_number('input-doubleclick-time', 300)
 local double_time
@@ -119,6 +130,11 @@ local function analyze_mouse(key)
 	local down_start = nil
 
 	local function recognized_event(fun, dx, dy)
+		if (fun == single_click or fun == long_click)
+			and mbtn == 'left' and windowed and window_dragging_enabled
+			and opts.ignore_left_single_long_while_window_dragging then
+			return
+		end
 		if last_down_x >= area_x0 and last_down_x < area_x1 and
 			last_down_y >= area_y0 and last_down_y < area_y1 then
 			fun(dx, dy)
@@ -234,4 +250,18 @@ mp.observe_property('input-doubleclick-time', 'number', function(name, val)
 	if val then prop_double_time = val
 	else prop_double_time = 300 end
 	update_double_time()
+end)
+
+mp.observe_property('fullscreen', 'bool', function(name, val)
+	msg.trace(name, val)
+	if val == nil then return end
+	fullscreen = val
+	update_windowed()
+end)
+
+mp.observe_property('maximized', 'bool', function(name, val)
+	msg.trace(name, val)
+	if val == nil then return end
+	maximized = val
+	update_windowed()
 end)
