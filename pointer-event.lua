@@ -1,4 +1,4 @@
--- pointer-event 1.1.1 - 2023-Jan-01
+-- pointer-event 1.2.0 - 2023-Jan-26
 -- https://github.com/christoph-heinrich/mpv-pointer-event
 --
 -- Low latency detection of single-click, double-click, long-click and dragging.
