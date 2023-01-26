@@ -63,13 +63,4 @@ Beware of conflicts with mpvs built-in key bindings as well as your key configur
 
 ## Example
 
-[touch.lua](https://github.com/christoph-heinrich/mpv-pointer-event/raw/master/example/scripts/touch.lua) and [pointer-event.conf](https://github.com/christoph-heinrich/mpv-pointer-event/raw/master/example/script-opts/pointer-event.conf) are an example for a configuration that's useful on touchscreens.  
-It has [uosc](https://github.com/tomasklaen/uosc) integration, but it also works without that.
-
-Single click/tap pauses/unpauses the video.  
-Long click/tap opens the menu.  
-Double click/tap on the left or right third to seek 10 seconds.  
-Double click/tap on the middle third cycles fullscreen.  
-Drag/swipe vertical on the left half to change speed.  
-Drag/swipe vertical on the right half to change volume.  
-Drag/swipe horizontal to seek.  
+[touch-gestures](https://github.com/christoph-heinrich/mpv-touch-gestures) is an example of what can be done with this.
