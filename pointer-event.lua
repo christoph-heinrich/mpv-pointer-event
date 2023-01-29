@@ -259,7 +259,7 @@ mp.observe_property('fullscreen', 'bool', function(name, val)
 	update_windowed()
 end)
 
-mp.observe_property('maximized', 'bool', function(name, val)
+mp.observe_property('window-maximized', 'bool', function(name, val)
 	msg.trace(name, val)
 	if val == nil then return end
 	maximized = val
