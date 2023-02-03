@@ -57,7 +57,8 @@ They all have sensible default values with `double_click_time` following [input-
 `drag_distance` determines how far the input has to be dragged to count as a drag instead of a click/touch.
 The `margin_*` options allow for easier interaction with the osd without triggering any events.
 
-It can be desirable to have window dragging enabled and also want gesture detection.  `ignore_left_single_long_while_window_dragging` exists to avoid triggering single and long click events while dragging the window. Those events will still work while in fullscreen or maximized mode.
+It can be desirable to have window dragging enabled and also want gesture detection.  `ignore_left_single_long_while_window_dragging` exists to avoid triggering single and long click events while dragging the window. Those events will still work while in fullscreen or maximized mode.  
+Keep in mind that window dragging already starts on button down, even without moving the mouse/finger.
 
 Beware of conflicts with mpvs built-in key bindings as well as your key configuration in `input.conf`.
 
